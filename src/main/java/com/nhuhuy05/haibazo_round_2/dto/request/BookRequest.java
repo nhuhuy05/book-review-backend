@@ -12,5 +12,5 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class BookRequest {
     String name;
-    String authorId;
+    Integer authorId;
 }

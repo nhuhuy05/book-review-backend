@@ -30,8 +30,8 @@ public class ReviewServiceImpl implements ReviewService {
     BookRepository bookRepository;
 
     @Override
-    public ReviewResponse createReview(@RequestBody ReviewRequest request) {
-        Book book = bookRepository.findById(Integer.parseInt(request.getBookId())).orElseThrow(() -> new RuntimeException("Book not found"));
+    public ReviewResponse createReview(ReviewRequest request) {
+        Book book = bookRepository.findById(request.getBookId()).orElseThrow(() -> new RuntimeException("Book not found"));
         Review review = reviewMapper.toReview(request);
         review.setBook(book);
         Review createdReview = reviewRepository.save(review);
@@ -39,8 +39,8 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public ReviewResponse updateReview(Integer id, @RequestBody ReviewRequest request) {
-        Book book = bookRepository.findById(Integer.parseInt(request.getBookId())).orElseThrow(() -> new RuntimeException("Book not found"));
+    public ReviewResponse updateReview(Integer id, ReviewRequest request) {
+        Book book = bookRepository.findById(request.getBookId()).orElseThrow(() -> new RuntimeException("Book not found"));
         Review review = reviewRepository.findById(id).orElseThrow(() -> new RuntimeException("Review not found"));
         review.setBook(book);
         review.setReview(request.getReview());

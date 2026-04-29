@@ -8,7 +8,7 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ReviewRequest {
+public class ReviewRequest { 
     String review;
-    String bookId;
+    Integer bookId;
 }

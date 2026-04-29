@@ -27,7 +27,7 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public BookResponse createBook(BookRequest request) {
-        Author author = authorRepository.findById(Integer.parseInt(request.getAuthorId())).orElseThrow(() -> new RuntimeException("Author not found"));
+        Author author = authorRepository.findById(request.getAuthorId()).orElseThrow(() -> new RuntimeException("Author not found"));
         Book book = bookMapper.toBook(request);
         book.setAuthor(author);
         Book savedBook = bookRepository.save(book);
@@ -36,7 +36,7 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public BookResponse updateBook(Integer id, BookRequest request) {
-        Author author = authorRepository.findById(Integer.parseInt(request.getAuthorId())).orElseThrow(() -> new RuntimeException("Author not found"));
+        Author author = authorRepository.findById(request.getAuthorId()).orElseThrow(() -> new RuntimeException("Author not found"));
         Book book = bookRepository.findById(id).orElseThrow(() -> new RuntimeException("Book not found"));
         bookMapper.updateBook(book, request);
         book.setAuthor(author);
