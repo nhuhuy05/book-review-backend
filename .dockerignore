@@ -1,0 +1,15 @@
+.git
+.gitignore
+.idea
+.vscode
+target
+out
+build
+.mvn
+*.log
+*.tmp
+*.swp
+README.md
+HELP.md
+**/.DS_Store
+**/Thumbs.db
