@@ -1,7 +1,5 @@
 server:
   port: ${PORT:8080}
-  servlet:
-    context-path: /book-review
 
 spring:
   application:
@@ -12,7 +10,7 @@ spring:
     password: ${DB_PASS:123456}
   jpa:
       hibernate:
-        ddl-auto: update
+#        ddl-auto: update
       show-sql: true
       properties:
         hibernate:
