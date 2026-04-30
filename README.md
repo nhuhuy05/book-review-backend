@@ -1,6 +1,6 @@
 # Haibazo Round 2 - Book Review API
 
-REST API quản lý **Author**, **Book**, **Review** sử dụng Spring Boot + JPA + PostgreSQL.
+REST API quản lý `Author`, `Book`, `Review` sử dụng Spring Boot + JPA + PostgreSQL.
 
 ## Công nghệ sử dụng
 
@@ -25,12 +25,12 @@ REST API quản lý **Author**, **Book**, **Review** sử dụng Spring Boot + J
 
 ## Base URL
 
-- Port: `8080`
-- Context path: `/book-review`
+- Port mặc định: `8080`
+- Context path: không cấu hình (mặc định là `/`)
 
 Base URL đầy đủ:
 
-`http://localhost:8080/book-review`
+`http://localhost:8080`
 
 ## Tổng quan API
 
@@ -133,10 +133,8 @@ java -jar target/haibazo-round-2-0.0.1-SNAPSHOT.jar
 ./mvnw test
 ```
 
-## Gợi ý cải thiện
+## Lưu ý hiện tại
 
-- Nên dùng `Integer` cho `authorId`/`bookId` trong DTO request.
-- Nên thêm validation (`@NotNull`, `@NotBlank`) và `@Valid` ở controller.
-- Nên chuẩn hóa lỗi `400/404` bằng `@ControllerAdvice`.
-
-
+- API hiện chưa khai báo `server.servlet.context-path` trong `application.yaml`.
+- API hiện chưa thêm validation cho request DTO (`@NotNull`, `@NotBlank`, `@Valid`).
+- Xử lý lỗi đang dùng `RuntimeException` trực tiếp, nên bổ sung `@ControllerAdvice` để trả về mã lỗi rõ ràng hơn.
