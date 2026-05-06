@@ -5,13 +5,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.nhuhuy05.haibazo_round_2.dto.request.AuthorRequest;
 import com.nhuhuy05.haibazo_round_2.dto.response.AuthorResponse;
 import com.nhuhuy05.haibazo_round_2.entity.Author;
+import com.nhuhuy05.haibazo_round_2.exception.ResourceNotFoundException;
 import com.nhuhuy05.haibazo_round_2.mapper.AuthorMapper;
 import com.nhuhuy05.haibazo_round_2.repository.AuthorRepository;
 import com.nhuhuy05.haibazo_round_2.service.AuthorService;
@@ -25,6 +27,7 @@ public class AuthorServiceImpl implements AuthorService {
     AuthorMapper authorMapper;
 
     @Override
+    @Transactional
     public AuthorResponse createAuthor(AuthorRequest request) {
         Author author = authorMapper.toAuthor(request);
         Author savedAuthor = authorRepository.save(author);
@@ -32,30 +35,30 @@ public class AuthorServiceImpl implements AuthorService {
     }
 
     @Override
+    @Transactional
     public AuthorResponse updateAuthor(Integer id, AuthorRequest request) {
-        Author author = authorRepository.findById(id).orElseThrow(() -> new RuntimeException("author not found"));
+        Author author = authorRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Author with id " + id + " not found"));
         author.setName(request.getName());
         Author savedAuthor = authorRepository.save(author);
         return authorMapper.toAuthorResponse(savedAuthor);
     }
 
     @Override
-    public List<AuthorResponse> getAllAuthor() {
-        return authorRepository.findAll()
-                .stream()
-                .map(authorMapper::toAuthorResponse)
-                .toList();
+    public Page<AuthorResponse> getAllAuthor(Pageable pageable) {
+        return authorRepository.findAll(pageable)
+                .map(authorMapper::toAuthorResponse);
     }
 
     @Override
     public AuthorResponse getAuthorById(Integer id) {
-        Author author = authorRepository.findById(id).orElseThrow(() -> new RuntimeException("author not found"));
+        Author author = authorRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Author with id " + id + " not found"));
         return authorMapper.toAuthorResponse(author);
     }
 
     @Override
+    @Transactional
     public void deleteAuthor(Integer id) {
-        Author author = authorRepository.findById(id).orElseThrow(() -> new RuntimeException("author not found"));
+        Author author = authorRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Author with id " + id + " not found"));
         authorRepository.delete(author);
     }
 }

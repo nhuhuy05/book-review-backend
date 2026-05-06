@@ -14,5 +14,5 @@ public interface ReviewMapper {
 
     @Mapping(target = "bookName", source = "book.name")
     @Mapping(target = "authorName", source = "book.author.name")
-    ReviewResponse toReviewReponse(Review review);
+    ReviewResponse toReviewResponse(Review review);
 }

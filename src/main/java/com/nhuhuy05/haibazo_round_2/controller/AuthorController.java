@@ -1,7 +1,18 @@
 package com.nhuhuy05.haibazo_round_2.controller;
 
-import java.util.List;
-
+import com.nhuhuy05.haibazo_round_2.dto.request.AuthorRequest;
+import com.nhuhuy05.haibazo_round_2.dto.response.ApiResponse;
+import com.nhuhuy05.haibazo_round_2.dto.response.AuthorResponse;
+import com.nhuhuy05.haibazo_round_2.dto.response.Pagination;
+import com.nhuhuy05.haibazo_round_2.service.AuthorService;
+import jakarta.validation.Valid;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,16 +22,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.http.HttpStatus;
 
-import com.nhuhuy05.haibazo_round_2.dto.request.AuthorRequest;
-import com.nhuhuy05.haibazo_round_2.dto.response.AuthorResponse;
-import com.nhuhuy05.haibazo_round_2.service.AuthorService;
-
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
-import lombok.extern.slf4j.Slf4j;
+import java.util.List;
 
 @RestController
 @RequestMapping("/authors")
@@ -31,28 +34,54 @@ public class AuthorController {
     AuthorService authorService;
 
     @GetMapping
-    public ResponseEntity<List<AuthorResponse>> getAllAuthors() {
-        return ResponseEntity.ok(authorService.getAllAuthor());
+    public ResponseEntity<ApiResponse<List<AuthorResponse>>> getAllAuthors(Pageable pageable) {
+        Page<AuthorResponse> page = authorService.getAllAuthor(pageable);
+        return ResponseEntity.ok(ApiResponse.<List<AuthorResponse>>builder()
+                .success(true)
+                .status(HttpStatus.OK.value())
+                .message("Get all authors successfully")
+                .data(page.getContent())
+                .pagination(Pagination.from(page))
+                .build());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AuthorResponse> getAuthorById(@PathVariable Integer id) {
-        return ResponseEntity.status(HttpStatus.OK).body(authorService.getAuthorById(id));
+    public ResponseEntity<ApiResponse<AuthorResponse>> getAuthorById(@PathVariable Integer id) {
+        return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.<AuthorResponse>builder()
+                .success(true)
+                .status(HttpStatus.OK.value())
+                .message("Get author successfully")
+                .data(authorService.getAuthorById(id))
+                .build());
     }
 
     @PostMapping
-    public ResponseEntity<AuthorResponse> createAuthor(@RequestBody AuthorRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(authorService.createAuthor(request));
+    public ResponseEntity<ApiResponse<AuthorResponse>> createAuthor(@Valid @RequestBody AuthorRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.<AuthorResponse>builder()
+                .success(true)
+                .status(HttpStatus.CREATED.value())
+                .message("Create author successfully")
+                .data(authorService.createAuthor(request))
+                .build());
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<AuthorResponse> updateAuthor(@PathVariable Integer id, @RequestBody AuthorRequest request) {
-        return ResponseEntity.ok(authorService.updateAuthor(id, request));
+    public ResponseEntity<ApiResponse<AuthorResponse>> updateAuthor(@PathVariable Integer id, @Valid @RequestBody AuthorRequest request) {
+        return ResponseEntity.ok(ApiResponse.<AuthorResponse>builder()
+                .success(true)
+                .status(HttpStatus.OK.value())
+                .message("Update author successfully")
+                .data(authorService.updateAuthor(id, request))
+                .build());
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteAuthor(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<Void>> deleteAuthor(@PathVariable Integer id) {
         authorService.deleteAuthor(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.<Void>builder()
+                .success(true)
+                .status(HttpStatus.OK.value())
+                .message("Delete author successfully")
+                .build());
     }
 }

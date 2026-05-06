@@ -1,5 +1,7 @@
 package com.nhuhuy05.haibazo_round_2.dto.request;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -8,7 +10,10 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ReviewRequest { 
+public class ReviewRequest {
+    @NotBlank(message = "review must not be blank")
     String review;
+
+    @NotNull(message = "bookId must not be null")
     Integer bookId;
 }
