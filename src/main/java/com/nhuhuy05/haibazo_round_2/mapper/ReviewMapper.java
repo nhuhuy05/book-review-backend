@@ -12,7 +12,9 @@ import org.mapstruct.Mapping;
 public interface ReviewMapper {
     Review toReview(ReviewRequest request);
 
+    @Mapping(target = "bookId", source = "book.id")
     @Mapping(target = "bookName", source = "book.name")
+    @Mapping(target = "authorId", source = "book.author.id")
     @Mapping(target = "authorName", source = "book.author.name")
     ReviewResponse toReviewResponse(Review review);
 }

@@ -1,213 +1,138 @@
-# Book Review API - Tài Liệu Tích Hợp Frontend
+# 📚 Book Review API - Frontend Integration Guide
 
-Tài liệu này cung cấp chi tiết về các endpoint API, cấu trúc dữ liệu và cách gọi API dành cho Frontend Developer.
+Tài liệu này được thiết kế đặc biệt dành cho **Frontend Developer** để dễ dàng hiểu cấu trúc dữ liệu, các endpoint và cách tích hợp với Backend API.
 
-## 1. Thông Tin Cơ Bản
-
-- **Base URL (Local):** `http://localhost:8080`
-- **Content-Type:** `application/json`
+- **Base URL (Local)**: `http://localhost:8080`
+- Tất cả các request và response đều sử dụng định dạng `application/json`.
 
 ---
 
-## 2. Cấu Trúc Response Chung (Chuẩn)
+## 📦 1. TypeScript Interfaces (Định dạng Dữ liệu)
 
-Tất cả các API đều trả về dữ liệu theo cùng một cấu trúc (Wrapper) như sau:
+Bạn có thể copy trực tiếp các interfaces dưới đây vào dự án Frontend của mình để sử dụng (hỗ trợ TypeScript).
 
+### 1.1. Core Interfaces (Cấu trúc Response dùng chung)
+
+Mọi API trả về đều được bọc trong một `ApiResponse`. Tùy thuộc vào việc gọi API lấy danh sách hay chi tiết mà `data` sẽ là Array hay Object.
+
+```typescript
+// Cấu trúc Response chung cho toàn bộ API
+export interface ApiResponse<T> {
+  success: boolean;
+  status: number;       // HTTP Status Code (200, 201, 400, 404, 500...)
+  message: string;      // Thông báo từ server
+  data?: T;             // Dữ liệu trả về (có thể không có nếu lỗi hoặc API delete)
+  pagination?: PaginationMeta; // Chỉ xuất hiện khi gọi API GET danh sách
+  
+  // Các field dưới đây chỉ xuất hiện khi có lỗi (success = false)
+  error?: string;       // Tên loại lỗi (VD: "Bad Request")
+  fieldErrors?: Record<string, string>; // Chi tiết lỗi validation (VD: { name: "Must not be blank" })
+}
+
+// Thông tin phân trang (dành cho table, list)
+export interface PaginationMeta {
+  page: number;         // Trang hiện tại (Bắt đầu từ 0)
+  size: number;         // Số phần tử trên 1 trang (Mặc định 20)
+  totalElements: number;// Tổng số tất cả các phần tử
+  totalPages: number;   // Tổng số trang
+  first: boolean;       // Có phải trang đầu tiên không?
+  last: boolean;        // Có phải trang cuối cùng không?
+}
+```
+
+### 1.2. Data Models (Các thực thể chính)
+
+```typescript
+export interface Author {
+  id: number;
+  name: string;
+}
+
+export interface Book {
+  id: number;
+  name: string;
+  authorId: number;
+  authorName: string; // Tên tác giả được đính kèm sẵn để Frontend tiện hiển thị
+}
+
+export interface Review {
+  id: number;
+  bookId: number;
+  bookName: string;   // Tên sách được đính kèm sẵn
+  authorId: number;
+  authorName: string; // Tên tác giả được đính kèm sẵn
+  review: string;     // Nội dung đánh giá
+}
+```
+
+---
+
+## 🚀 2. Danh sách API (Quick Reference)
+
+| Đối tượng | Method | Endpoint | Query Params (GET) | Body (POST/PUT) | Chức năng |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Authors** | `GET` | `/authors` | `page`, `size`, `sort` | - | Lấy danh sách tác giả (có phân trang) |
+| | `GET` | `/authors/{id}` | - | - | Lấy chi tiết 1 tác giả |
+| | `POST` | `/authors` | - | `{ name: string }` | Thêm mới tác giả |
+| | `PUT` | `/authors/{id}` | - | `{ name: string }` | Cập nhật tác giả |
+| | `DELETE`| `/authors/{id}` | - | - | Xoá tác giả |
+| **Books** | `GET` | `/books` | `page`, `size`, `sort` | - | Lấy danh sách sách (có phân trang) |
+| | `GET` | `/books/{id}` | - | - | Lấy chi tiết 1 quyển sách |
+| | `POST` | `/books` | - | `{ name, authorId }` | Thêm mới sách |
+| | `PUT` | `/books/{id}` | - | `{ name, authorId }` | Cập nhật sách |
+| | `DELETE`| `/books/{id}` | - | - | Xoá sách |
+| **Reviews** | `GET` | `/reviews` | `page`, `size`, `sort` | - | Lấy danh sách đánh giá (có phân trang) |
+| | `GET` | `/reviews/{id}`| - | - | Lấy chi tiết 1 đánh giá |
+| | `POST` | `/reviews` | - | `{ review, bookId }`| Thêm mới đánh giá |
+| | `PUT` | `/reviews/{id}`| - | `{ review, bookId }`| Cập nhật đánh giá |
+| | `DELETE`| `/reviews/{id}`| - | - | Xoá đánh giá |
+
+> **Gợi ý Query Params:**
+> - `page`: Trang cần lấy (mặc định là `0`).
+> - `size`: Số lượng hiển thị (mặc định là `20`).
+> - `sort`: Sắp xếp. VD: `sort=name,asc` hoặc `sort=id,desc`.
+
+---
+
+## 🛑 3. Xử lý Lỗi (Error Handling)
+
+Khi gọi API bị lỗi, Frontend cần chú ý bắt các `HTTP Status` sau:
+
+- **`400 Bad Request` (Lỗi Validation):** Xảy ra khi form gửi lên bị thiếu trường hoặc sai định dạng. Frontend dùng `fieldErrors` để hiển thị lỗi màu đỏ dưới các ô input.
+- **`404 Not Found`:** Xảy ra khi truyền sai ID hoặc dữ liệu đã bị xóa.
+- **`500 Internal Server Error`:** Lỗi từ hệ thống Backend.
+
+**Ví dụ JSON trả về khi lỗi Validation (Mã 400):**
 ```json
 {
-  "success": true,               // Trạng thái thành công của request (true/false)
-  "status": 200,                 // HTTP Status Code (200, 201, 400, 404, 500...)
-  "message": "Success message",  // Thông báo trả về
-  "data": { ... },               // Dữ liệu chính (Object, Array, null...)
-  "pagination": { ... },         // (Optional) Thông tin phân trang (nếu là list)
-  "error": "...",                // (Optional) Tên lỗi khi success = false
-  "fieldErrors": { ... },        // (Optional) Lỗi validate các trường dữ liệu
-  "timestamp": "2026-..."        // (Optional) Thời gian xảy ra lỗi
-}
-```
-
-### 2.1 Cấu Trúc Phân Trang (Pagination)
-
-Đối với các API lấy danh sách (`GET /authors`, `GET /books`, `GET /reviews`), response sẽ có thêm trường `pagination`. 
-Khi gọi các API này, Frontend có thể truyền `page` (bắt đầu từ 0) và `size` (mặc định 20) qua Query Params.
-
-**Ví dụ Request:** `GET /books?page=0&size=10`
-
-**Cấu trúc Pagination trong Response:**
-```json
-"pagination": {
-  "page": 0,             // Trang hiện tại (bắt đầu từ 0)
-  "size": 20,            // Số lượng phần tử mỗi trang
-  "totalElements": 100,  // Tổng số lượng phần tử
-  "totalPages": 5,       // Tổng số trang
-  "first": true,         // Có phải trang đầu tiên không
-  "last": false          // Có phải trang cuối cùng không
+  "success": false,
+  "status": 400,
+  "error": "Bad Request",
+  "message": "Validation failed",
+  "fieldErrors": {
+    "name": "name must not be blank",
+    "authorId": "authorId must not be null"
+  }
 }
 ```
 
 ---
 
-## 3. Danh Sách API Chi Tiết
+## ⚙️ 4. Hướng dẫn chạy Backend (Dành cho Dev setup)
 
-### 3.1 Authors (Tác Giả)
+Nếu bạn là Frontend Dev và cần tự chạy Backend này ở máy cá nhân (Local):
 
-#### Lấy danh sách tác giả (Có phân trang)
-- **Method:** `GET`
-- **URL:** `/authors`
-- **Query Params:** `?page=0&size=20` (Optional)
-- **Response Data:** Mảng các đối tượng Author
-  ```json
-  "data": [
-    {
-      "id": 1,
-      "name": "Robert C. Martin"
-    }
-  ]
-  ```
+**Yêu cầu:** Máy đã cài sẵn Java 21+ và PostgreSQL.
 
-#### Lấy chi tiết tác giả
-- **Method:** `GET`
-- **URL:** `/authors/{id}`
-- **Response Data:** Đối tượng Author
+**Biến môi trường cần thiết:**
+- `PORT` (Mặc định: `8080`)
+- `DB_HOST` (Mặc định: `localhost`)
+- `DB_NAME` (Mặc định: `book-review`)
+- `DB_USER` (Mặc định: `postgres`)
+- `DB_PASS` (Mặc định: `123456`)
 
-#### Tạo tác giả mới
-- **Method:** `POST`
-- **URL:** `/authors`
-- **Body:**
-  ```json
-  {
-    "name": "Robert C. Martin"
-  }
-  ```
+**Chạy trực tiếp bằng Maven (khuyên dùng cho Local):**
+```bash
+./mvnw spring-boot:run
+```
 
-#### Cập nhật tác giả
-- **Method:** `PUT`
-- **URL:** `/authors/{id}`
-- **Body:**
-  ```json
-  {
-    "name": "Robert C. Martin - Updated"
-  }
-  ```
-
-#### Xóa tác giả
-- **Method:** `DELETE`
-- **URL:** `/authors/{id}`
-- **Response Data:** `null` (Chỉ cần kiểm tra `success: true`)
-
----
-
-### 3.2 Books (Sách)
-
-#### Lấy danh sách sách (Có phân trang)
-- **Method:** `GET`
-- **URL:** `/books`
-- **Query Params:** `?page=0&size=20` (Optional)
-- **Response Data:** Mảng các đối tượng Book
-  ```json
-  "data": [
-    {
-      "id": 1,
-      "name": "Clean Code",
-      "authorName": "Robert C. Martin"
-    }
-  ]
-  ```
-
-#### Lấy chi tiết sách
-- **Method:** `GET`
-- **URL:** `/books/{id}`
-- **Response Data:** Đối tượng Book
-
-#### Tạo sách mới
-- **Method:** `POST`
-- **URL:** `/books`
-- **Body:**
-  ```json
-  {
-    "name": "Clean Code",
-    "authorId": 1
-  }
-  ```
-  *(Lưu ý: `authorId` bắt buộc phải là ID của tác giả đã tồn tại)*
-
-#### Cập nhật sách
-- **Method:** `PUT`
-- **URL:** `/books/{id}`
-- **Body:**
-  ```json
-  {
-    "name": "Clean Architecture",
-    "authorId": 1
-  }
-  ```
-
-#### Xóa sách
-- **Method:** `DELETE`
-- **URL:** `/books/{id}`
-
----
-
-### 3.3 Reviews (Đánh Giá)
-
-#### Lấy danh sách đánh giá (Có phân trang)
-- **Method:** `GET`
-- **URL:** `/reviews`
-- **Query Params:** `?page=0&size=20` (Optional)
-- **Response Data:** Mảng các đối tượng Review
-  ```json
-  "data": [
-    {
-      "id": 1,
-      "bookName": "Clean Code",
-      "authorName": "Robert C. Martin",
-      "review": "Very useful for clean architecture."
-    }
-  ]
-  ```
-
-#### Lấy chi tiết đánh giá
-- **Method:** `GET`
-- **URL:** `/reviews/{id}`
-- **Response Data:** Đối tượng Review
-
-#### Tạo đánh giá mới
-- **Method:** `POST`
-- **URL:** `/reviews`
-- **Body:**
-  ```json
-  {
-    "review": "Very useful for clean architecture.",
-    "bookId": 1
-  }
-  ```
-  *(Lưu ý: `bookId` bắt buộc phải là ID của sách đã tồn tại)*
-
-#### Cập nhật đánh giá
-- **Method:** `PUT`
-- **URL:** `/reviews/{id}`
-- **Body:**
-  ```json
-  {
-    "review": "Great book, highly recommend!",
-    "bookId": 1
-  }
-  ```
-
-#### Xóa đánh giá
-- **Method:** `DELETE`
-- **URL:** `/reviews/{id}`
-
----
-
-## 4. Chạy Backend Ở Môi Trường Local (Dành cho Frontend)
-
-Nếu bạn cần tự chạy Backend trên máy để test:
-
-1. Đảm bảo đã cài **Java 21** và **PostgreSQL**.
-2. Tạo database PostgreSQL có tên `book-review`.
-3. Cập nhật mật khẩu DB trong file `src/main/resources/application.yaml` (nếu cần).
-4. Mở terminal tại thư mục Backend và chạy lệnh:
-   - Trên Windows: `.\mvnw.cmd spring-boot:run`
-   - Trên Mac/Linux: `./mvnw spring-boot:run`
-5. Mặc định Backend sẽ chạy ở cổng `8080`.

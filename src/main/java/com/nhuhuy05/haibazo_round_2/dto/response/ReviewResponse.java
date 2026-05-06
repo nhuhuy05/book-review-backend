@@ -10,7 +10,9 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ReviewResponse {
     Integer id;
+    Integer bookId;
     String bookName;
+    Integer authorId;
     String authorName;
     String review;
 }

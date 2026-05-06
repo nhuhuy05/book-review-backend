@@ -13,6 +13,7 @@ public interface BookMapper {
     Book toBook(BookRequest request);
 
     // entity -> response
+    @Mapping(target = "authorId", source = "author.id")
     @Mapping(target = "authorName", source = "author.name")
     BookResponse toBookResponse(Book book);
 

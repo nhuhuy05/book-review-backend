@@ -21,6 +21,4 @@ public class ApiResponse<T> {
     Pagination pagination;
     String error;
     Map<String, String> fieldErrors;
-    String path;
-    OffsetDateTime timestamp;
 }
