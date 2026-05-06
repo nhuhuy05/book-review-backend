@@ -13,4 +13,5 @@ public class BookResponse {
     String name;
     Integer authorId;
     String authorName;
+    Integer reviewsCount;
 }

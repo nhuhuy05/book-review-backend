@@ -16,6 +16,7 @@ import com.nhuhuy05.haibazo_round_2.entity.Author;
 import com.nhuhuy05.haibazo_round_2.exception.ResourceNotFoundException;
 import com.nhuhuy05.haibazo_round_2.mapper.AuthorMapper;
 import com.nhuhuy05.haibazo_round_2.repository.AuthorRepository;
+import com.nhuhuy05.haibazo_round_2.repository.BookRepository;
 import com.nhuhuy05.haibazo_round_2.service.AuthorService;
 
 @Service
@@ -25,13 +26,14 @@ import com.nhuhuy05.haibazo_round_2.service.AuthorService;
 public class AuthorServiceImpl implements AuthorService {
     AuthorRepository authorRepository;
     AuthorMapper authorMapper;
+    BookRepository bookRepository;
 
     @Override
     @Transactional
     public AuthorResponse createAuthor(AuthorRequest request) {
         Author author = authorMapper.toAuthor(request);
         Author savedAuthor = authorRepository.save(author);
-        return authorMapper.toAuthorResponse(savedAuthor);
+        return toResponseWithCount(savedAuthor);
     }
 
     @Override
@@ -40,19 +42,19 @@ public class AuthorServiceImpl implements AuthorService {
         Author author = authorRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Author with id " + id + " not found"));
         author.setName(request.getName());
         Author savedAuthor = authorRepository.save(author);
-        return authorMapper.toAuthorResponse(savedAuthor);
+        return toResponseWithCount(savedAuthor);
     }
 
     @Override
     public Page<AuthorResponse> getAllAuthor(Pageable pageable) {
         return authorRepository.findAll(pageable)
-                .map(authorMapper::toAuthorResponse);
+                .map(this::toResponseWithCount);
     }
 
     @Override
     public AuthorResponse getAuthorById(Integer id) {
         Author author = authorRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Author with id " + id + " not found"));
-        return authorMapper.toAuthorResponse(author);
+        return toResponseWithCount(author);
     }
 
     @Override
@@ -60,5 +62,11 @@ public class AuthorServiceImpl implements AuthorService {
     public void deleteAuthor(Integer id) {
         Author author = authorRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Author with id " + id + " not found"));
         authorRepository.delete(author);
+    }
+
+    private AuthorResponse toResponseWithCount(Author author) {
+        AuthorResponse response = authorMapper.toAuthorResponse(author);
+        response.setBooksCount((int) bookRepository.countByAuthorId(author.getId()));
+        return response;
     }
 }

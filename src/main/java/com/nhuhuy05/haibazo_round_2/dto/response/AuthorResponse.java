@@ -11,4 +11,5 @@ import lombok.experimental.FieldDefaults;
 public class AuthorResponse {
     Integer id;
     String name;
+    Integer booksCount;
 }

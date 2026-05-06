@@ -4,4 +4,5 @@ import com.nhuhuy05.haibazo_round_2.entity.Review;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ReviewRepository extends JpaRepository<Review, Integer> {
+    long countByBookId(Integer bookId);
 }

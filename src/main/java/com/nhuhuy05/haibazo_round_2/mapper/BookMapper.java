@@ -15,6 +15,7 @@ public interface BookMapper {
     // entity -> response
     @Mapping(target = "authorId", source = "author.id")
     @Mapping(target = "authorName", source = "author.name")
+    @Mapping(target = "reviewsCount", ignore = true)
     BookResponse toBookResponse(Book book);
 
     // map du lieu tu request -> book

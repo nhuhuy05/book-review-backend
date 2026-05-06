@@ -8,6 +8,7 @@ import com.nhuhuy05.haibazo_round_2.exception.ResourceNotFoundException;
 import com.nhuhuy05.haibazo_round_2.mapper.BookMapper;
 import com.nhuhuy05.haibazo_round_2.repository.AuthorRepository;
 import com.nhuhuy05.haibazo_round_2.repository.BookRepository;
+import com.nhuhuy05.haibazo_round_2.repository.ReviewRepository;
 import com.nhuhuy05.haibazo_round_2.service.BookService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ public class BookServiceImpl implements BookService {
     BookRepository bookRepository;
     BookMapper bookMapper;
     AuthorRepository authorRepository;
+    ReviewRepository reviewRepository;
 
     @Override
     @Transactional
@@ -35,7 +37,7 @@ public class BookServiceImpl implements BookService {
         Book book = bookMapper.toBook(request);
         book.setAuthor(author);
         Book savedBook = bookRepository.save(book);
-        return bookMapper.toBookResponse(savedBook);
+        return toResponseWithCount(savedBook);
     }
 
     @Override
@@ -48,20 +50,19 @@ public class BookServiceImpl implements BookService {
         bookMapper.updateBook(book, request);
         book.setAuthor(author);
         Book savedBook = bookRepository.save(book);
-        return bookMapper.toBookResponse(savedBook);
+        return toResponseWithCount(savedBook);
     }
 
     @Override
     public Page<BookResponse> getAllBooks(Pageable pageable) {
         return bookRepository.findAll(pageable)
-                .map(bookMapper::toBookResponse);
+                .map(this::toResponseWithCount);
     }
 
     @Override
     public BookResponse getBookById(Integer id) {
-        return bookMapper
-                .toBookResponse(bookRepository.findById(id)
-                        .orElseThrow(() -> new ResourceNotFoundException("Book with id " + id + " not found")));
+        return toResponseWithCount(bookRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Book with id " + id + " not found")));
     }
 
     @Override
@@ -70,5 +71,11 @@ public class BookServiceImpl implements BookService {
         Book book = bookRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Book with id " + id + " not found"));
         bookRepository.delete(book);
+    }
+
+    private BookResponse toResponseWithCount(Book book) {
+        BookResponse response = bookMapper.toBookResponse(book);
+        response.setReviewsCount((int) reviewRepository.countByBookId(book.getId()));
+        return response;
     }
 }
